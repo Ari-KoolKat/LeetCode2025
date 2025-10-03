@@ -4,39 +4,41 @@ class Solution(object):
         :type heightMap: List[List[int]]
         :rtype: int
         """
-        if not heightMap or not heightMap[0]:
-            return 0
 
-        m = len(heightMap)
-        n = len(heightMap[0])
+        m, n = len(heightMap), len(heightMap[0])
         visited = [[False] * n for _ in range(m)]
-        minHeap = []
-
-        # Add all boundary cells to the min-heap
+        
+        pq = []
+        
+        # Set the boundary elements as visited
         for i in range(m):
             for j in range(n):
-                if i == 0 or i == m - 1 or j == 0 or j == n - 1:
-                    heapq.heappush(minHeap, (heightMap[i][j], i, j))
+                if i == 0 or i == m-1 or j == 0 or j == n-1:
+                    heapq.heappush(pq, (heightMap[i][j], i, j))
                     visited[i][j] = True
-
-        waterTrapped = 0
-        directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]  # down, up, right, left
-
-        while minHeap:
-            height, x, y = heapq.heappop(minHeap)
-
-            # Explore neighbors
-            for dx, dy in directions:
-                newX, newY = x + dx, y + dy
-
-                # Check bounds
-                if 0 <= newX < m and 0 <= newY < n and not visited[newX][newY]:
-                    # If the neighbor is lower than the current height, it can trap water
-                    if heightMap[newX][newY] < height:
-                        waterTrapped += height - heightMap[newX][newY]
+        
+        directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+        
+        water_volume = 0
+        
+        # Applying the BFS Traversal
+        while pq:
+            cv, cr, cc = heapq.heappop(pq)
+            
+            # Visiting the adjacent elements of current element
+            for dr, dc in directions:
+                nr, nc = cr + dr, cc + dc
+                
+                # Checking if the element is within row, column and not visited
+                if 0 <= nr < m and 0 <= nc < n and not visited[nr][nc]:
+                    # Volume of water it can trap after raining
+                    if cv - heightMap[nr][nc] > 0:
+                        water_volume += cv - heightMap[nr][nc]
+                        heapq.heappush(pq, (cv, nr, nc))
+                    else:
+                        heapq.heappush(pq, (heightMap[nr][nc], nr, nc))
                     
-                    # Push the maximum height to the heap
-                    heapq.heappush(minHeap, (max(height, heightMap[newX][newY]), newX, newY))
-                    visited[newX][newY] = True
-
-        return waterTrapped
+                    visited[nr][nc] = True
+        
+        return water_volume
+        
